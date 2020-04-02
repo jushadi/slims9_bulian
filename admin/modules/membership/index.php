@@ -509,7 +509,7 @@ if (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'd
                 } else if ($cfield['type'] == 'choice') {
                   $form->addRadio($cf_dbfield, $cf_label, $cf_data, $rec_cust_d[$cf_dbfield]??$cf_default);
                 } else if ($cfield['type'] == 'date') {
-                  $form->addDateField($cf_dbfield, $cf_label, $rec_cust_d[$cf_dbfield]??$cf_default);
+                  $form->addDateField($cf_dbfield, $cf_label, $rec_cust_d[$cf_dbfield]??$cf_default, 'class="form-control"');
                 }
             }
         }
