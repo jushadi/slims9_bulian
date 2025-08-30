@@ -26,8 +26,8 @@ $request_uri = urlencode(strip_tags(urldecode($_SERVER['REQUEST_URI'])));
     <meta http-equiv="Expires" content="Sat, 26 Jul 1997 05:00:00 GMT"/>
     <?php echo $metadata;?>
     <?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail')): ?>
-        <meta name="description" content="<?php echo substr($notes, 0, 152) . '...'; ?>">
-        <meta name="keywords" content="<?php echo $subject; ?>">
+        <meta name="description" content="<?php echo isset($notes) ? substr(strip_tags($notes), 0, 152) . '...' : $page_title; ?>">
+        <meta name="keywords" content="<?php echo isset($subject) ? $subject : $sysconf['library_subname']; ?>">
     <?php else: ?>
         <meta name="description" content="<?php echo $page_title; ?>">
         <meta name="keywords" content="<?php echo $sysconf['library_subname']; ?>">
@@ -40,28 +40,28 @@ $request_uri = urlencode(strip_tags(urldecode($_SERVER['REQUEST_URI'])));
     <meta property="og:type" content="book"/>
     <meta property="og:title" content="<?php echo $page_title; ?>"/>
     <?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail')): ?>
-        <meta property="og:description" content="<?php echo substr($notes, 0, 152) . '...'; ?>"/>
+        <meta property="og:description" content="<?php echo isset($notes) ? substr(strip_tags($notes), 0, 152) . '...' : $sysconf['library_subname']; ?>"/>
     <?php else: ?>
         <meta property="og:description" content="<?php echo $sysconf['library_subname']; ?>"/>
     <?php endif; ?>
     <meta property="og:url" content="//<?php echo $_SERVER["SERVER_NAME"] . $request_uri; ?>"/>
     <meta property="og:site_name" content="<?php echo $sysconf['library_name']; ?>"/>
-    <?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail')): ?>
-        <meta property="og:image" content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $image_src ?>"/>
-    <?php else: ?>
-        <meta property="og:image"
-              content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $sysconf['template']['dir']; ?>/default/img/logo.png"/>
-    <?php endif; ?>
+<?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail') && isset($image_src)): ?>
+    <meta property="og:image" content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $image_src ?>"/>
+<?php else: ?>
+    <meta property="og:image"
+          content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $sysconf['template']['dir']; ?>/default/img/logo.png"/>
+<?php endif; ?>
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:url" content="//<?php echo $_SERVER["SERVER_NAME"] . $request_uri; ?>"/>
     <meta name="twitter:title" content="<?php echo $page_title; ?>"/>
-    <?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail')): ?>
-        <meta property="twitter:image" content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $image_src ?>"/>
-    <?php else: ?>
-        <meta property="twitter:image"
-              content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $sysconf['template']['dir']; ?>/default/img/logo.png"/>
-    <?php endif; ?>
+<?php if (isset($_GET['p']) && ($_GET['p'] == 'show_detail') && isset($image_src)): ?>
+    <meta property="twitter:image" content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $image_src ?>"/>
+<?php else: ?>
+    <meta property="twitter:image"
+          content="//<?php echo $_SERVER["SERVER_NAME"] . SWB . $sysconf['template']['dir']; ?>/default/img/logo.png"/>
+<?php endif; ?>
     <!-- // load bootstrap style -->
     <link rel="stylesheet" href="<?php echo assets('css/bootstrap.min.css'); ?>">
     <!-- // font awesome -->
