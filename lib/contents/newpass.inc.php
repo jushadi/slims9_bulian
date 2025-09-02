@@ -18,140 +18,144 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Modified by Jushadi Arman Saz 202509021600
  */
 
 // be sure that this file not accessed directly
 if (!defined('INDEX_AUTH')) {
     die("can not access this file directly");
-} elseif (INDEX_AUTH != 1) { 
-    die("can not access this file directly");
 }
 
-// required file
-require LIB.'admin_logon.inc.php';
-require SIMBIO.'simbio_DB/simbio_dbop.inc.php';
-
-// https connection (if enabled)
-if ($sysconf['https_enable']) {
-    simbio_security::doCheckHttps($sysconf['https_port']);
+if (!class_exists('simbio_dbop')) {
+    require SIMBIO.'simbio_DB/simbio_dbop.inc.php';
 }
 
-$email = $dbs->escape_string($_GET['email']);
-$salt = $dbs->escape_string($_GET['salt']);
-$url = $_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'];
+$token = $_GET['token'] ?? '';
+$is_token_valid = false;
+$user_data = null;
+$feedback_script = '';
+$error_message = '';
+$update_success = false;
 
-// validate current salt and email
-$query = sprintf("SELECT user_id,realname FROM user WHERE email='%s' AND forgot='%s'", $email, $salt);
-$_q = $dbs->query($query);
-$file_d = $_q->fetch_assoc();
-$_uname = $file_d['realname'];
+if (!empty($token)) {
+    $php_timezone = new DateTimeZone(date_default_timezone_get());
+    $one_hour_ago = new DateTime('now', $php_timezone);
+    $one_hour_ago->modify('-1 hour');
+    $limit_time_string = $one_hour_ago->format('Y-m-d H:i:s');
 
+    $stmt = $dbs->prepare("SELECT user_id, realname, email FROM user WHERE forgot = ? AND last_update > ?");
+    $stmt->bind_param('ss', $token, $limit_time_string);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-// update password
-if (isset($_POST['updatePassword'])) {
-  $passwd = trim($_POST['newPasswd']);
-  $passwd2 = trim($_POST['newPasswd2']);
-  if (empty($passwd)) {
-    utility::jsAlert(__('Current password can not be empty!'));
-  } else if (($passwd AND $passwd2) AND ($passwd !== $passwd2)) {
-    utility::jsAlert(__('Password confirmation does not match. See if your Caps Lock key is on!'));
-  } else {
-    // Confirm about email and salt again
-    if ($_q->num_rows > 0) {
-      $_sql_update_password = sprintf("UPDATE user SET passwd = '%s', last_update = CURDATE(), forgot='' WHERE email = '%s' AND forgot= '%s'", password_hash($passwd2, PASSWORD_BCRYPT), $email, $salt);
-      $_update_q = $dbs->query($_sql_update_password);
-      // error check
-      if ($dbs->error) {
-        echo __('Failed to query user data from database with error: '.$dbs->error);
-      }
-      // write log
-      writeLog('staff', $_uname, 'Login', 'Change password SUCCESS for user '.$_uname.' from address '.$_SERVER['REMOTE_ADDR'], 'Password', 'Update');
-
-      // clear cookie
-      #setcookie('token', '', time()-3600, SWB);
-      #setcookie('token', '', time()-3600, SWB, "", FALSE, TRUE);
-
-      setcookie('token', '', [
-        'expires' => time()-3600,
-        'path' => SWB,
-        'domain' => '',
-        'secure' => false,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-
-
-
-      #setcookie('uname', '', time()-3600, SWB);
-      #setcookie('uname', '', time()-3600, SWB, "", FALSE, TRUE);
-
-      setcookie('uname', '', [
-        'expires' => time()-3600,
-        'path' => SWB,
-        'domain' => '',
-        'secure' => false,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-
-
-      echo '<script type="text/javascript">';
-      echo 'alert("'.__("Password has been updated successfully.").'");';
-      echo 'location.href = "index.php?p=login";';
-      echo '</script>';
+    if ($result->num_rows > 0) {
+        $is_token_valid = true;
+        $user_data = $result->fetch_assoc();
     } else {
-      echo '<script type="text/javascript">';
-      echo 'alert("'.__("Salt key has been expired.").'");';
-      echo '</script>';
+        $error_message = __('Invalid or expired reset token.');
     }
-  }
+} else {
+    $error_message = __('Reset token not provided.');
 }
 
-// start the output buffering for main content
+if (isset($_POST['updatePassword']) && $is_token_valid) {
+    $passwd = trim($_POST['newPasswd']);
+    $passwd2 = trim($_POST['newPasswd2']);
+    $message = '';
+
+    if (empty($passwd)) {
+        $message = __('New password cannot be empty!');
+    } else if ($passwd !== $passwd2) {
+        $message = __('Password confirmation does not match. See if your Caps Lock key is on!');
+    } else {
+        $hashed_password = password_hash($passwd, PASSWORD_DEFAULT);
+        $update_stmt = $dbs->prepare("UPDATE user SET passwd = ?, last_update = NOW(), forgot = NULL WHERE forgot = ?");
+        $update_stmt->bind_param('ss', $hashed_password, $token);
+        
+        if ($update_stmt->execute()) {
+            writeLog('staff', $user_data['realname'], 'Login', 'Change password SUCCESS for user '.$user_data['realname'], 'Password', 'Update');
+            $update_success = true;
+            $message = addslashes(__('Password has been updated successfully. Redirecting to login page...'));
+            $login_url = 'index.php?p=login';
+            
+            $feedback_script = <<<HTML
+            <script>
+            $(document).ready(function() {
+                if (typeof toastr !== 'undefined') {
+                    toastr.options = { "timeOut": 3000, "progressBar": true };
+                    toastr.success('{$message}');
+                    setTimeout(function() {
+                        window.location.href = '{$login_url}';
+                    }, 3000);
+                } else {
+                    window.location.href = '{$login_url}';
+                }
+            });
+            </script>
+            HTML;
+
+        } else {
+            $message = __('Failed to update password. Please contact the administrator.');
+        }
+    }
+    
+    if ($message && !$update_success) {
+        $safe_message = addslashes($message);
+        $feedback_script = "<script>$(document).ready(function() { toastr.error('{$safe_message}'); });</script>";
+    }
+}
+
+$page_title = __('Create New Password').' | '.$sysconf['library_name'];
 ob_start();
-
-// if not valid
 ?>
-<div id="loginForm">
-    <noscript>
-        <div style="font-weight: bold; color: #FF0000;"><?php echo __('Your browser does not support Javascript or Javascript is disabled. Application won\'t run without Javascript!'); ?><div>
-    </noscript>
-    <?php if ($_q->num_rows <= 0): ?>
-      <?php echo __('Current email not found or salt key has been expired'); ?>
-    <?php else: ?>    
-    <form action="<?php echo $url ?>" method="post">
-        <div class="heading1"><?php echo __('New Password'); ?></div>
-        <div class="login_input"><input type="password" name="newPasswd" class="login_input" /></div>
-        <div class="heading1"><?php echo __('Confirm New Password'); ?></div>
-        <div class="login_input"><input type="password" name="newPasswd2" class="login_input" /></div>
-        <div class="marginTop">
-        <input type="submit" name="updatePassword" value="<?php echo __('Update'); ?>" class="loginButton" />
-        </div>
-    </form>
-    <?php endif ?>
+<div class="card">
+    <div class="card-header"><?php echo __('Librarian - Create New Password'); ?></div>
+    <div class="card-body">
+        <?php if (!$is_token_valid): ?>
+            <div class="alert alert-danger">
+                <?php echo $error_message; ?><br>
+                <small><?php echo __('Please request a new password reset link.'); ?></small>
+            </div>
+            <a href="index.php?p=login" class="btn btn-secondary"><?php echo __('Back to Login') ?></a>
+        <?php elseif ($update_success): ?>
+            <div class="alert alert-success">
+                <?php echo __('Password Updated Successfully'); ?><br>
+                <small><?php echo __('You will be redirected to the login page shortly.'); ?></small>
+            </div>
+        <?php else: ?>
+            <form action="index.php?p=newpass&token=<?php echo htmlspecialchars($token); ?>" method="post">
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label"><?php echo __('New Password'); ?></label>
+                    <div class="col-sm-8">
+                        <input type="password" name="newPasswd" class="form-control" required autofocus />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-4 col-form-label"><?php echo __('Confirm New Password'); ?></label>
+                    <div class="col-sm-8">
+                        <input type="password" name="newPasswd2" class="form-control" required />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-8 offset-sm-4">
+                        <input type="submit" name="updatePassword" value="<?php echo __('Update Password'); ?>" class="btn btn-primary" />
+                    </div>
+                </div>
+            </form>
+        <?php endif; ?>
+    </div>
 </div>
-<script type="text/javascript">jQuery('#userName').focus();</script>
-
 <?php
-
-// main content
 $main_content = ob_get_clean();
+$main_content .= $feedback_script;
 
-// page title
-$page_title = __('Create new password').' | '.$sysconf['library_name'];
 
-if ($sysconf['template']['base'] == 'html') {
-    // create the template object
-    $template = new simbio_template_parser($sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/login_template.html');
-    // assign content to markers
-    $template->assign('<!--PAGE_TITLE-->', $page_title);
-    $template->assign('<!--CSS-->', $sysconf['template']['css']);
-    $template->assign('<!--MAIN_CONTENT-->', $main_content);
-    // print out the template
+if ($sysconf['template']['base'] == 'php') {
+    require_once $sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/index_template.inc.php';
+} else {
+    $template = new simbio_template_parser($sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/index_template.html');
+    $template->assign('', $page_title);
+    $template->assign('', $main_content);
     $template->printOut();
-} else if ($sysconf['template']['base'] == 'php') {
-    require_once $sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/login_template.inc.php';
 }
-
 exit();
-
