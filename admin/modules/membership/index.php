@@ -93,7 +93,7 @@ if (isset($_POST['removeImage']) && isset($_POST['mimg']) && isset($_POST['img']
     exit();
 }
 /* member update process */
-if (isset($_POST['saveData']) AND $can_read AND $can_write) {
+if (isset($_POST['saveData']) && $can_read && $can_write) {
     // check form validity
     $memberID = trim($_POST['memberID']);
     $memberName = trim($_POST['memberName']);
@@ -103,8 +103,11 @@ if (isset($_POST['saveData']) AND $can_read AND $can_write) {
     if (empty($memberID) OR empty($memberName) OR empty($birthDate)) {
         toastr(__('Member ID, Name and Birthday cannot be empty'))->error(); //mfc
         exit();
-    } else if (($mpasswd1 OR $mpasswd2) AND ($mpasswd1 !== $mpasswd2)) {
+    } else if (($mpasswd1 OR $mpasswd2) && ($mpasswd1 !== $mpasswd2)) {
         toastr(__('Password confirmation does not match. See if your Caps Lock key is on!'))->error();
+        exit();
+    } else if ($sysconf['password_policy_strong'] && ($mpasswd1 AND $mpasswd2) && ($mpasswd1 === $mpasswd2) && !simbio_security::validatePassword($mpasswd2, $sysconf['password_policy_min_length'])) {
+        toastr(__( sprintf('Password should at least %d characters long, contains one capital letter, one number, and one non-alphanumeric character !', $sysconf['password_policy_min_length']) ))->error();
         exit();
     } else {
         // include custom fields file
@@ -642,6 +645,10 @@ if (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'd
     }
     // print out the form object
     echo $form->printOut();
+    if ($sysconf['password_policy_strong']) {
+        echo simbio_security::validatePasswordFunctionJS();
+        echo '<script type="text/javascript">comparePassword("#mainForm", "#memberPasswd", "#memberPasswd2", '.$sysconf['password_policy_min_length'].');</script>';
+    }
 ?>
 <script type="text/javascript">
 $(document).ready(function() {

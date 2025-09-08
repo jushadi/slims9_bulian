@@ -295,6 +295,7 @@ if ($is_member_login) :
        */
     function changePassword()
     {
+        global $sysconf;
         // show the member information
         $_form = '<form id="memberChangePassword" method="post" action="index.php?p=member&sec=my_account">' . "\n";
         $_form .= '<table class="memberDetail table table-striped" cellpadding="5" cellspacing="0">' . "\n";
@@ -315,6 +316,10 @@ if ($is_member_login) :
         $_form .= '</tr>' . "\n";
         $_form .= '</table>' . "\n";
         $_form .= '</form>' . "\n";
+        if ($sysconf['password_policy_strong']) {
+            $_form .= simbio_security::validatePasswordFunctionJS();
+            $_form .= '<script type="text/javascript">comparePassword("#memberChangePassword", "input[name=newPass]", "input[name=newPass2]", '.$sysconf['password_policy_min_length'].');</script>';
+        }    
 
         return $_form;
     }
@@ -329,7 +334,12 @@ if ($is_member_login) :
        */
     function procChangePassword($str_curr_pass, $str_new_pass, $str_conf_new_pass)
     {
-        global $dbs;
+        global $dbs, $sysconf;
+        if ($sysconf['password_policy_strong'] && ($str_new_pass AND $str_conf_new_pass) 
+            && ($str_new_pass === $str_conf_new_pass) 
+            && !simbio_security::validatePassword($str_conf_new_pass, $sysconf['password_policy_min_length'])) {
+            return CANT_UPDATE_PASSWD;
+        } 
         // get hash from db
         $_str_pass_sql = sprintf('SELECT mpasswd FROM member
             WHERE member_id=\'%s\'', $dbs->escape_string(trim($_SESSION['mid'])));

@@ -789,7 +789,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     // biblio authors
     // $str_input = '<div class="'.$visibility.'"><a class="notAJAX button" href="javascript: openHTMLpop(\''.MWB.'bibliography/pop_author.php?biblioID='.$rec_d['biblio_id'].'\', 500, 200, \''.__('Authors/Roles').'\')">'.__('Add Author(s)').'</a></div>';
     $str_input = '<div class="' . $visibility . '"><a class="s-btn btn btn-default notAJAX openPopUp" href="' . MWB . 'bibliography/pop_author.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '" title="' . __('Authors/Roles') . '">' . __('Add Author(s)') . '</a></div>';
-    $str_input .= '<iframe name="authorIframe" id="authorIframe" class="form-control" style="width: 100%; height: 100px;" src="' . MWB . 'bibliography/iframe_author.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
+    $str_input .= '<iframe name="authorIframe" id="authorIframe" class="form-control auto-resize-iframe" style="width: 100%; min-height: 80px; max-height: 300px;" src="' . MWB . 'bibliography/iframe_author.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
     $form->addAnything(__('Author(s)'), $str_input);
 
     // modified by hendro wicaksono
@@ -908,7 +908,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     if (!$in_pop_up AND $form->edit_mode) {
         // $str_input = '<div class="makeHidden s-margin__bottom-1"><a class="notAJAX button" href="javascript: openHTMLpop(\''.MWB.'bibliography/pop_item.php?inPopUp=true&action=detail&biblioID='.$rec_d['biblio_id'].'\', 650, 400, \''.__('Items/Copies').'\')">'.__('Add New Items').'</a></div>';
         $str_input = '<div class="makeHidden s-margin__bottom-1"><a class="s-btn btn btn-default notAJAX openPopUp" href="' . MWB . 'bibliography/pop_item.php?inPopUp=true&action=detail&biblioID=' . $rec_d['biblio_id'] . '" title="' . __('Items/Copies') . '" width="780" height="500">' . __('Add New Items') . '</a></div>';
-        $str_input .= '<iframe name="itemIframe" id="itemIframe" class="form-control" style="width: 100%; height: 100px;" src="' . MWB . 'bibliography/iframe_item_list.php?biblioID=' . $rec_d['biblio_id'] . '&block=1"></iframe>' . "\n";
+        $str_input .= '<iframe name="itemIframe" id="itemIframe" class="form-control auto-resize-iframe" style="width: 100%; height: 100px; min-height: 80px; max-height: 400px;" src="' . MWB . 'bibliography/iframe_item_list.php?biblioID=' . $rec_d['biblio_id'] . '&block=1"></iframe>' . "\n";
         $form->addAnything(__('Item(s) Data'), $str_input);
     }
     // biblio gmd
@@ -986,7 +986,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     // biblio topics
     // $str_input = '<div class="'.$visibility.'"><a class="notAJAX button" href="javascript: openHTMLpop(\''.MWB.'bibliography/pop_topic.php?biblioID='.$rec_d['biblio_id'].'\', 500, 200, \''.__('Subjects/Topics').'\')">'.__('Add Subject(s)').'</a></div>';
     $str_input = '<div class="' . $visibility . ' s-margin__bottom-1"><a class="s-btn btn btn-default notAJAX openPopUp" href="' . MWB . 'bibliography/pop_topic.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '" title="' . __('Subjects/Topics') . '">' . __('Add Subject(s)') . '</a></div>';
-    $str_input .= '<iframe name="topicIframe" id="topicIframe" class="form-control" style="width: 100%; height: 100px;" src="' . MWB . 'bibliography/iframe_topic.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
+    $str_input .= '<iframe name="topicIframe" id="topicIframe" class="form-control auto-resize-iframe" style="width: 100%; height: 100px; min-height: 80px; max-height: 300px;" src="' . MWB . 'bibliography/iframe_topic.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
     $form->addAnything(__('Subject(s)'), $str_input);
     // biblio language
     // get language data related to this record from database
@@ -1068,12 +1068,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     // biblio file attachment
     // $str_input = '<div class="'.$visibility.'"><a class="notAJAX button" href="javascript: openHTMLpop(\''.MWB.'bibliography/pop_attach.php?biblioID='.$rec_d['biblio_id'].'\', 600, 300, \''.__('File Attachments').'\')">'.__('Add Attachment').'</a></div>';
     $str_input = '<div class="' . $visibility . ' s-margin__bottom-1"><a class="s-btn btn btn-default notAJAX openPopUp" href="' . MWB . 'bibliography/pop_attach.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '" width="780" height="500" title="' . __('File Attachments') . '">' . __('Add Attachment') . '</a></div>';
-    $str_input .= '<iframe name="attachIframe" id="attachIframe" class="form-control" style="width: 100%; height: 100px;" src="' . MWB . 'bibliography/iframe_attach.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
+    $str_input .= '<iframe name="attachIframe" id="attachIframe" class="form-control auto-resize-iframe" style="width: 100%; height: 100px; min-height: 80px; max-height: 250px;" src="' . MWB . 'bibliography/iframe_attach.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
     $form->addAnything(__('File Attachment'), $str_input);
 
     // biblio relation
     $str_input = '<div class="' . $visibility . ' s-margin__bottom-1"><a class="s-btn btn btn-default notAJAX openPopUp" href="' . MWB . 'bibliography/pop_biblio_rel.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '" title="' . __('Biblio Relation') . '">' . __('Add Relation') . '</a></div>';
-    $str_input .= '<iframe name="biblioIframe" id="biblioIframe" class="form-control" style="width: 100%; height: 100px;" src="' . MWB . 'bibliography/iframe_biblio_rel.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
+    $str_input .= '<iframe name="biblioIframe" id="biblioIframe" class="form-control auto-resize-iframe" style="width: 100%; height: 100px; min-height: 80px; max-height: 300px;" src="' . MWB . 'bibliography/iframe_biblio_rel.php?biblioID=' . ($rec_d['biblio_id'] ?? '') . '&block=1"></iframe>';
     $form->addAnything(__('Related Biblio Data'), $str_input);
 
     /**

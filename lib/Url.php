@@ -142,7 +142,9 @@ class Url
 
     public static function isAdmin()
     {
-        return stripos(self::getSelf(), '/admin');
+        $self = self::getSelf() ?? '';
+        // return true when any path segment is "admin" (e.g. /admin/index.php, /slims/admin/, /slims/subpath/admin/)
+        return (bool) preg_match('#(?:/|^)admin(?:/|$)#i', $self);
     }
 
     public static function isOpac()

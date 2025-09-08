@@ -11,18 +11,17 @@
 namespace SLiMS\Csv;
 
 use Closure;
-use Exception;
 
 class Reader
 {
     private int $limit = 0;
-    private array $standert;
+    private array $standart = [];
     private $resource;
     private array $fields = [];
 
-    public function __construct(array $standert = [])
+    public function __construct(array $standart = [])
     {
-        $this->standart = $standert?:config('csv');
+        $this->standart = $standart ?: config('csv');
     }
 
     public function readFromStream($resource)
@@ -54,7 +53,6 @@ class Reader
     public function each(Closure $formatter, Closure|string $processor = '', int $length = 102400)
     {
         $row = 1;
-        $fields = [];
         
         while (!feof($this->resource)) {
             // break it if limit exceed

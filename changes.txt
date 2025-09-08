@@ -43,7 +43,17 @@ Code enhancement: John Antony (john.antony@iamplus.com)
 
 THANKS TO OUR USERS AND COMMUNITIES, YOU ARE DEVELOPERS TOO!
 
-SLiMS 9.7 (Bulian D Roger)
+SLiMS 9.7.1 (Bulian D Roger)
+========================================================================
+• Improved language selection handling and load of global settings from the database.
+• Improved CSRF token management with backward compatibility and more robust handling.
+• Modernized AJAX updater and related functions for better validation, error handling, and UX.
+• Stronger password policy enforcement for OPAC and admin/member areas.
+• Fixed CSV reader variable/initialization issues and improved CSV handling.
+• Hardened SQL queries in procurement reports to validate and exclude invalid dates.
+• Improvements to language selection and global settings loading.
+
+SLiMS 9.7.0 (Bulian D Roger)
 ========================================================================
 Security - System security enhancements to protect data and application stability.
 • Comprehensive Security Patch: Patches SQL Injection and Stored XSS vulnerabilities, and enforces stronger password policies.

@@ -68,9 +68,11 @@ if (!$reportView) {
     $output .= '<tr>'.$second_header.$detail_class_coll.'</tr>';
 
     // get year data from databse
-    $_q = $dbs->query("SELECT YEAR(input_date) AS YEAR FROM item WHERE input_date != '' GROUP BY YEAR(input_date)");
+    // exclude NULL/empty/'0000-00-00' invalid dates to avoid YEAR() errors in strict SQL modes
+    // ensure input_date starts with a 4-digit year (YYYY-) so YEAR() is only called on valid dates
+    $_q = $dbs->query("SELECT YEAR(input_date) AS YEAR FROM item WHERE input_date IS NOT NULL AND input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') AND input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' GROUP BY YEAR(input_date)");
 
-    if($_q->num_rows >0){
+    if ($_q && $_q->num_rows > 0) {
         while ($_d = $_q->fetch_row()) {
             $years[$_d[0]] = $_d[0];
         }

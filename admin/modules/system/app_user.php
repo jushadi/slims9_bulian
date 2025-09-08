@@ -51,31 +51,6 @@ function getUserType($obj_db, $array_data, $col) {
   }
 }
 
-function validatePassword($password, $min_length = 8) {
-    // Check if the password is at least 8 characters long
-    if (strlen($password) < $min_length) {
-        return false;
-    }
-
-    // Check for at least one uppercase letter
-    if (!preg_match('/[A-Z]/', $password)) {
-        return false;
-    }
-
-    // Check for at least one number
-    if (!preg_match('/[0-9]/', $password)) {
-        return false;
-    }
-
-    // Check for at least one non-alphanumeric character
-    if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
-        return false;
-    }
-
-    // If all checks pass, return true
-    return true;
-}
-
 // check if we want to change current user profile
 $changecurrent = false;
 if (isset($_GET['changecurrent'])) {
@@ -148,7 +123,6 @@ if (isset($_POST['removeImage']) && isset($_POST['uimg']) && isset($_POST['img']
 if (isset($_POST['saveData'])) { //echo '<pre>'; var_dump($_SESSION); echo '</pre>'; die();
     $userName = $_SESSION['uid'] > 1 ? $_SESSION['uname'] : trim(strip_tags($_POST['userName']));
     $realName = trim(strip_tags($_POST['realName']));
-    #$old_passwd = $dbs->escape_string(trim($_POST['old_passwd']));
     $passwd1 = $dbs->escape_string(trim($_POST['passwd1']));
     $passwd2 = $dbs->escape_string(trim($_POST['passwd2']));
     // check form validity
@@ -158,8 +132,8 @@ if (isset($_POST['saveData'])) { //echo '<pre>'; var_dump($_SESSION); echo '</pr
     } else if (($userName == 'admin' OR $realName == 'Administrator') AND $_SESSION['uid'] != 1) {
         toastr(__('Login username or Real Name is probihited!'))->error();
         exit();
-    } else if ($sysconf['password_policy_strong'] AND ($passwd1 AND $passwd2) AND ($passwd1 === $passwd2) AND !validatePassword($passwd2, $sysconf['password_policy_min_length'])) {
-        toastr(__('Password should at least 8 characters long, contains one capital letter, one number, and one non-alphanumeric character !'))->error();
+    } else if ($sysconf['password_policy_strong'] && ($passwd1 AND $passwd2) && ($passwd1 === $passwd2) && !simbio_security::validatePassword($passwd2, $sysconf['password_policy_min_length'])) {
+        toastr(__( sprintf('Password should at least %d characters long, contains one capital letter, one number, and one non-alphanumeric character !', $sysconf['password_policy_min_length']) ))->error();
         exit();
     } else if (($passwd1 AND $passwd2) AND ($passwd1 !== $passwd2)) {
         toastr(__('Password confirmation does not match. See if your Caps Lock key is on!'))->error();
@@ -193,15 +167,18 @@ if (isset($_POST['saveData'])) { //echo '<pre>'; var_dump($_SESSION); echo '</pr
             $data['groups'] = trim($groups);
         }
         if (($passwd1 AND $passwd2) AND ($passwd1 === $passwd2)) {
-            $old_passwd = $dbs->escape_string(trim($_POST['old_passwd']));
-            $up_q = $dbs->query('SELECT passwd FROM user WHERE user_id='.$_SESSION['uid']);
-            $up_d = $up_q->fetch_row();
-            if (password_verify($old_passwd, $up_d[0])) {
-                $data['passwd'] = password_hash($passwd2, PASSWORD_BCRYPT);
-                // $data['passwd'] = 'literal{MD5(\''.$passwd2.'\')}';
+            if ( (isset($_GET['changecurrent'])) AND ($_GET['changecurrent']='true') ) {
+                $old_passwd = $dbs->escape_string(trim($_POST['old_passwd']));
+                $up_q = $dbs->query('SELECT passwd FROM user WHERE user_id='.$_SESSION['uid']);
+                $up_d = $up_q->fetch_row();
+                if (password_verify($old_passwd, $up_d[0])) {
+                    $data['passwd'] = password_hash($passwd2, PASSWORD_BCRYPT);
+                } else {
+                    toastr(__('Password change failed. Make sure you input the old password.'))->error();
+                    exit();
+                }
             } else {
-                toastr(__('Password change failed. Make sure you input the old password.'))->error();
-                exit();
+                $data['passwd'] = password_hash($passwd2, PASSWORD_BCRYPT);
             }
         }
         $data['input_date'] = date('Y-m-d');
@@ -484,7 +461,9 @@ if (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'd
         $form->addCheckBox('groups', __('Group(s)'), $group_options, unserialize($rec_d['groups']??''));
     }
     // user password
-    $form->addTextField('password', 'old_passwd', __('Old Password').'*', '', 'style="width: 50%;" class="form-control"');
+    if ( (isset($_GET['changecurrent'])) AND ($_GET['changecurrent']='true') ) {
+        $form->addTextField('password', 'old_passwd', __('Old Password').'*', '', 'style="width: 50%;" class="form-control"');
+    }
     $form->addTextField('password', 'passwd1', __('New Password').'*', '', 'style="width: 50%;" class="form-control"');
     // user password confirm
     $form->addTextField('password', 'passwd2', __('Confirm New Password').'*', '', 'style="width: 50%;" class="form-control"');
@@ -553,37 +532,8 @@ if (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'd
     echo $form->printOut();
     echo '<form id="formVerify2fa" target="blindSubmit" method="post" action="'.$_SERVER['PHP_SELF'].'?changecurrent=true"></form>';
     if ($sysconf['password_policy_strong']) {
-        echo '<script>';
-        echo 'function validatePassword(password, min_length = 8) {
-            // Check if the password length
-            if (password.length < '.$sysconf['password_policy_min_length'].') {
-                return false;
-            }
-            // Check for at least one uppercase letter
-            if (!/[A-Z]/.test(password)) {
-                return false;
-            }
-            // Check for at least one number
-            if (!/[0-9]/.test(password)) {
-                return false;
-            }
-            // Check for at least one non-alphanumeric character
-            if (!/[^a-zA-Z0-9]/.test(password)) {
-                return false;
-            }
-            return true;
-        }';
-        echo 'jQuery(\'#mainForm\').on(\'submit\', function(event) {
-            const password1 = jQuery(\'#passwd1\').val();
-            const password2 = jQuery(\'#passwd2\').val();
-            if (password1.length > 0 && password2.length > 0) {
-                if (!validatePassword(password2)) {
-                    event.preventDefault();
-                    alert(\'Password must contain at least one uppercase letter, one number, and one special character.\');
-                }
-            }
-        });';
-        echo '</script>';
+        echo simbio_security::validatePasswordFunctionJS();
+        echo '<script type="text/javascript">comparePassword("#mainForm", "#passwd1", "#passwd2", '.$sysconf['password_policy_min_length'].');</script>';
     }
 
 } else {

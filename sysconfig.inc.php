@@ -71,7 +71,7 @@ if ((bool) ini_get('safe_mode')) {
 
 // senayan version
 define('SENAYAN_VERSION', 'SLiMS 9 (Bulian D Roger)');
-define('SENAYAN_VERSION_TAG', 'v9.7.0');
+define('SENAYAN_VERSION_TAG', 'v9.7.1');
 
 // senayan session cookies name
 define('COOKIES_NAME', 'SenayanAdmin');
@@ -541,6 +541,29 @@ $localisation = \SLiMS\Polyglot\Memory::getInstance();
 // plugin locale
 $localisation->registerLanguageFromPlugin();
 
+// load global settings from database. Uncomment below lines if you dont want to load it
+utility::loadSettings($dbs);
+
+// check for user language selection if we are not in admin areas
+if (stripos($_SERVER['PHP_SELF'], '/admin') === false) {
+    if (isset($_GET['select_lang'])) {
+        $select_lang = trim(strip_tags($_GET['select_lang']));
+        // delete previous language cookie
+        if (isset($_COOKIE['select_lang'])) {
+            @setcookie('select_lang', $select_lang, time()-14400, SWB);
+        }
+        // create language cookie
+        @setcookie('select_lang', $select_lang, time()+14400, SWB);
+        $sysconf['default_lang'] = $select_lang;
+    } else if (isset($_COOKIE['select_lang'])) {
+        $sysconf['default_lang'] = trim(strip_tags($_COOKIE['select_lang']));
+    }
+    // set back to en_US on XML
+    if (isset($_GET['resultXML']) OR isset($_GET['inXML'])) {
+        $sysconf['default_lang'] = 'en_US';
+    }
+}
+
 // load localisation
 $localisation->load(function($memory) use($dbs, &$sysconf) {
     // For Admin Area
@@ -551,7 +574,6 @@ $localisation->load(function($memory) use($dbs, &$sysconf) {
         
         if (empty($_SESSION['lang'])) {
             $lang_dbs = $dbs->query("SELECT setting_value FROM setting WHERE setting_name = 'default_lang'");
-            //$lang_dbs_res = $lang_dbs->fetch(\PDO::FETCH_ASSOC);
             $lang_dbs_res = $lang_dbs->fetch_assoc();
             if ($lang_dbs_res && ($lang_val = unserialize($lang_dbs_res['setting_value']))) {
                 $_SESSION['lang'] = $lang_val;
@@ -564,23 +586,8 @@ $localisation->load(function($memory) use($dbs, &$sysconf) {
         return;
     }
 
-    // For OPAC Area
-    if (\SLiMS\Url::isOpac()) {
-        if (isset($_GET['select_lang'])) {
-            // remove last temp language at current memory
-            if (isset($_COOKIE['select_lang'])) $memory->forgetTempLanguage(languageName: $_GET['select_lang']);
-            
-            // make it one
-            $memory->rememberTempLanguage(languageName: $_GET['select_lang']);
-            
-            //reload page on change language
-            header("location:index.php");
-            exit;   
-        }
-
-        // set locale based on temp locale language
-        if ($memory->hasTempLanguage() && !\SLiMS\Url::inXml()) $memory->setLocale($memory->getLastTempLanguage());
-    }
+    // For OPAC Area - use the language set by cookie logic above
+    $memory->setLocale($sysconf['default_lang']);
 });
 
 // load helper
@@ -602,9 +609,6 @@ $localisation->registerLanguages([
     ['tr_TR', __('Turkish'), 'Turkish'],
     ['ur_PK', __('Urdu'), 'Urdu']
 ]);
-
-// load global settings from database. Uncomment below lines if you dont want to load it
-utility::loadSettings($dbs);
 
 // template info config
 if (!file_exists($sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/tinfo.inc.php')) {
@@ -692,9 +696,6 @@ $sysconf['p2pserver_type'] = [
   'MARC SRU server'
 ];
 
-// load global settings again for override tinfo setting
-utility::loadSettings($dbs);
-
 /**
  * Peer to peer server config
  */
@@ -760,6 +761,9 @@ $sysconf['log']['adv']['index'] = 'slims_logs';
 // librarian / system user password policy
 $sysconf['password_policy_strong'] = true;
 $sysconf['password_policy_min_length'] = 8;
+
+// load global settings again for override tinfo setting
+utility::loadSettings($dbs);
 
 // set default timezone
 // for a list of timezone, please see PHP Manual at "List of Supported Timezones" section
