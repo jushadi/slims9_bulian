@@ -43,6 +43,17 @@ Code enhancement: John Antony (john.antony@iamplus.com)
 
 THANKS TO OUR USERS AND COMMUNITIES, YOU ARE DEVELOPERS TOO!
 
+SLiMS 9.7.2 (Bulian D Roger)
+========================================================================
+• Feature: Loan History Maintenance + menu integration.
+• Upgrade: Removed loan-history triggers; replaced with direct updates; Add submenu handling in upgrade flow.
+• UX: Clearer delete confirmations; defaulted withConfirm; switched form submit to blindSubmit; removed iframe submitExec.
+• Assets: Added missing Colorbox CSS/JS includes.
+• Reports: Improved procurement date handling (prioritize received_date) and validation.
+• Circulation: Refactored member info display for clarity.
+• Settings/I18n: Improved language selection; load global settings from DB.
+• Access Control/Menu: Tightened checks; added widespread submenu access; refactored submenu arrays to associative keys; fixed isAdmin path matching.
+
 SLiMS 9.7.1 (Bulian D Roger)
 ========================================================================
 • Improved language selection handling and load of global settings from the database.

@@ -933,7 +933,7 @@ msgstr "Sind Sie sicher, dass Sie den ausgewählten Autor entfernen möchten?"
 #: admin/modules/serial_control/serial_base_lib.inc.php:136
 #: simbio2/simbio_GUI/form_maker/simbio_form_table.inc.php:113
 #: simbio2/simbio_GUI/form_maker/simbio_form_table_AJAX.inc.php:111
-msgid "Once deleted, it can't be restored!"
+msgid "Once deleted, it cannot be restored!"
 msgstr "Das löschen kann nicht rückgängig gemacht werden!"
 
 #: admin/modules/bibliography/iframe_author.php:82

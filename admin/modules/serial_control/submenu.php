@@ -24,5 +24,5 @@
 do_checkIP('smc');
 do_checkIP('smc-serialcontrol');
 
-$menu[] = array('Header', __('SERIAL CONTROL'));
-$menu[] = array(__('Subscription'), MWB.'serial_control/index.php', __('Manage Subscription'));
+$menu['serial_control.header'] = array('Header', __('SERIAL CONTROL'));
+$menu['serial_control.subscription'] = array(__('Subscription'), MWB.'serial_control/index.php', __('Manage Subscription'));

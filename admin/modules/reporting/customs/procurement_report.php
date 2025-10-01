@@ -67,10 +67,45 @@ if (!$reportView) {
     $output .= '<th colspan="2" class="text-center">'.__('ALL').'</th><th rowspan="2" class="text-center">'.__('Options').'</th></tr>';
     $output .= '<tr>'.$second_header.$detail_class_coll.'</tr>';
 
-    // get year data from databse
+    // get year data from database
+    // use received_date as primary, input_date as secondary fallback
     // exclude NULL/empty/'0000-00-00' invalid dates to avoid YEAR() errors in strict SQL modes
-    // ensure input_date starts with a 4-digit year (YYYY-) so YEAR() is only called on valid dates
-    $_q = $dbs->query("SELECT YEAR(input_date) AS YEAR FROM item WHERE input_date IS NOT NULL AND input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') AND input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' GROUP BY YEAR(input_date)");
+    $_q = $dbs->query("SELECT YEAR(
+        CASE 
+            WHEN received_date IS NOT NULL 
+                AND received_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                AND received_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' 
+            THEN received_date
+            WHEN input_date IS NOT NULL 
+                AND input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                AND input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' 
+            THEN input_date
+            ELSE NULL
+        END
+    ) AS YEAR 
+    FROM item 
+    WHERE (
+        (received_date IS NOT NULL 
+         AND received_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+         AND received_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        OR 
+        (input_date IS NOT NULL 
+         AND input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+         AND input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    )
+    GROUP BY YEAR(
+        CASE 
+            WHEN received_date IS NOT NULL 
+                AND received_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                AND received_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' 
+            THEN received_date
+            WHEN input_date IS NOT NULL 
+                AND input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                AND input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' 
+            THEN input_date
+            ELSE NULL
+        END
+    )");
 
     if ($_q && $_q->num_rows > 0) {
         while ($_d = $_q->fetch_row()) {
@@ -92,7 +127,28 @@ if (!$reportView) {
                 $_q = $dbs->query("SELECT i.item_code,i.biblio_id 
                     FROM item i LEFT JOIN biblio b ON b.biblio_id=i.biblio_id 
                     WHERE  b.title IS NOT NULL 
-                    AND ".$classes.($year == __('ALL')? '': ' AND YEAR(i.input_date)  = '.$year));
+                    AND (
+                        (i.received_date IS NOT NULL 
+                         AND i.received_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                         AND i.received_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}')
+                        OR 
+                        (i.input_date IS NOT NULL 
+                         AND i.input_date NOT IN ('', '0000-00-00','0000-00-00 00:00:00') 
+                         AND i.input_date RLIKE '^[0-9]{4}-[0-9]{2}-[0-9]{2}')
+                    )
+                    AND ".$classes.($year == __('ALL')? '': ' AND YEAR(
+                        CASE 
+                            WHEN i.received_date IS NOT NULL 
+                                AND i.received_date NOT IN (\'\', \'0000-00-00\',\'0000-00-00 00:00:00\') 
+                                AND i.received_date RLIKE \'^[0-9]{4}-[0-9]{2}-[0-9]{2}\' 
+                            THEN i.received_date
+                            WHEN i.input_date IS NOT NULL 
+                                AND i.input_date NOT IN (\'\', \'0000-00-00\',\'0000-00-00 00:00:00\') 
+                                AND i.input_date RLIKE \'^[0-9]{4}-[0-9]{2}-[0-9]{2}\' 
+                            THEN i.input_date
+                            ELSE NULL
+                        END
+                    ) = '.$year));
 
                 $dataset[$year]['title'][$class_name] = 0;
                 $dataset[$year]['item'][$class_name] = 0;
@@ -121,7 +177,8 @@ if (!$reportView) {
             $output .= '<a class="btn-sm btn btn-primary notAJAX openPopUp" href="'.MWB.'reporting/pop_chart.php?filter='.$year.'" width="700" height="530" title="'.__('Procurement Bar Chart').'"><i class="fa fa-bar-chart" aria-hidden="true"></i></a>';           
             $output .= '</div></td></tr>';
         }
-    }   
+    }
+
     $output .= '</table>';
     // set abbreviation details about "t" and "i" below year column
     $output .= '<div class="d-block mt-2"><strong>'.__('Description').'</strong><br><b class="text-bold">'.__('t').'</b> : <label>'.__('Title').'</label><br><b class="text-bold">'.__('i').'</b> : <label>'.__('Item').'</label></div>';

@@ -93,7 +93,7 @@ class simbio_datagrid extends simbio_table
         if (!isset($this->chbox_property)) $this->chbox_property = array('itemID', __('DELETE'));
         if (!isset($this->edit_property)) $this->edit_property = array('itemID', __('EDIT'));
 
-
+        
         // check database connection
         if (!$obj_db OR $obj_db->error) {
             $_error = '<div style="padding: 5px; margin: 3px; border: 1px dotted #FF0000; color: #FF0000;">';
@@ -101,37 +101,37 @@ class simbio_datagrid extends simbio_table
             $_error .= '</div>';
             return $_error;
         }
-
+        
         // set editable flag
         $this->editable = $bool_editable;
-
+        
         // set default confirm message
         if (empty($this->chbox_confirm_msg)) $this->chbox_confirm_msg = __('Are You Sure Want to DELETE Selected Data?');
-
+        
         // enable or disable confirm message
         $this->enable_chbox_confirm = config('enable_chbox_confirm', $this->enable_chbox_confirm);
-
+        
         $this->sql_table = $str_db_table;
         $this->highlight_row = true;
         // sanitize table ID
         $this->table_ID = strtolower(str_replace(array(' ', '-', ','), '', $this->table_ID));
-
+        
         if (empty($this->sql_table)) {
             die('simbio_datagrid : Table not specified yet');
         }
-
+        
         // get page number from http get var
         if (isset($_GET['page']) AND $_GET['page'] > 1) {
             $this->current_page = (integer) $_GET['page'];
         }
-
+        
         // count the row offset
         if ($this->current_page <= 1) {
             $_offset = 0;
         } else {
             $_offset = ($this->current_page*$int_num2show) - $int_num2show;
         }
-
+        
         // change the record sorting if there fld var in URL
         $_fld_sort = $this->table_ID.'fld';
         $_dir = 'ASC';
@@ -154,20 +154,20 @@ class simbio_datagrid extends simbio_table
                 $this->sql_order .= $_dir;
             }
         }
-
+        
         // check group by
         if ($this->sql_group_by) {
             $this->sql_group_by = ' GROUP BY '.$this->sql_group_by;
         }
-
+        
         // sql string
         $_sql_str = 'SELECT SQL_CALC_FOUND_ROWS '.$this->select_flag.' '.$this->sql_column.
-            ' FROM '.$this->sql_table.' '.$this->sql_criteria.
-            ' '.$this->sql_group_by.' '.$this->sql_order." LIMIT $int_num2show OFFSET $_offset";
-
+        ' FROM '.$this->sql_table.' '.$this->sql_criteria.
+        ' '.$this->sql_group_by.' '.$this->sql_order." LIMIT $int_num2show OFFSET $_offset";
+        
         // for debugging purpose only
         $this->sql_str = $_sql_str;
-
+        
         // real query
         $_start = function_exists('microtime')?microtime(true):time();
         $this->grid_real_q = $obj_db->query($_sql_str);
@@ -188,12 +188,12 @@ class simbio_datagrid extends simbio_table
         if ($this->grid_real_q->num_rows < 1) {
             return $this->printTable();
         }
-
+        
         // fetch total number of data
         $_num_query = $obj_db->query('SELECT FOUND_ROWS()');
         $_data = $_num_query->fetch_row();
         $this->num_rows = $_data[0];
-
+        
         // check the query string and rebuild with urlencoded value
         $_url_query_str = '';
         if (isset($_SERVER['QUERY_STRING']) AND !empty($_SERVER['QUERY_STRING'])) {
@@ -209,7 +209,7 @@ class simbio_datagrid extends simbio_table
                 }
             }
         }
-
+        
         // make all field name link for sorting
         $this->grid_result_fields = array();
         // adding record order links to field name header
@@ -222,7 +222,7 @@ class simbio_datagrid extends simbio_table
                 $this->grid_result_fields[] = $_fld->name;
             }
         }
-
+        
         // table header and invisible fields shifting
         // if the table is editable
         if ($this->editable) {
@@ -249,16 +249,16 @@ class simbio_datagrid extends simbio_table
                 $this->invisible_fields = $_shifted_inv_fld;
             }
         }
-
+        
         // field count
         $_field_cnt = count($this->grid_result_fields);
-
+        
         $_row = 1;
         // records
         while ($_data = $this->grid_real_q->fetch_row()) {
             $this->grid_result_rows[$_row] = $_data;
             $_row_class = ($_row%2 == 0)?'alterCell':'alterCell2';
-
+            
             // modified content
             foreach ($this->modified_content as $_field_num => $_new_content) {
                 // change the value of modified column
@@ -277,7 +277,7 @@ class simbio_datagrid extends simbio_table
                     }
                 }
             }
-
+            
             // if the table is editable
             // make delete checkbox and edit button
             if ($this->editable) {
@@ -292,14 +292,14 @@ class simbio_datagrid extends simbio_table
                 if ($this->edit_property) {
                     $_edit_data = $this->edit_property[0].'='.$this->grid_result_rows[$_row][0].'&detail=true';
                     $_edit_link = '<a class="editLink'.( !$this->using_AJAX?' notAJAX':'' ).'" '
-                        .'href="'.$_SERVER['PHP_SELF'].'?'.$_edit_data.'&'.$_url_query_str.'" postdata="'.$_edit_data.'" title="Edit">'.( $this->edit_link_text?$this->edit_link_text:'&nbsp;' ).'</a>';
+                    .'href="'.$_SERVER['PHP_SELF'].'?'.$_edit_data.'&'.$_url_query_str.'" postdata="'.$_edit_data.'" title="Edit">'.( $this->edit_link_text?$this->edit_link_text:'&nbsp;' ).'</a>';
                     $_edit_fields[] = $_edit_link;
                 }
                 // unset the first element (ID field)
                 unset($this->grid_result_rows[$_row][0]);
                 $this->grid_result_rows[$_row] = array_merge($_edit_fields, $this->grid_result_rows[$_row]);
             }
-
+            
             // editable field style and column width modification
             for ($f = 0; $f < $_field_cnt; $f++) {
                 if (($this->chbox_property AND $this->edit_property) AND ($f < 2) AND $this->editable) {
@@ -322,24 +322,24 @@ class simbio_datagrid extends simbio_table
                 }
             }
             $this->setCellAttr($_row, null, 'class="'.$_row_class.'"');
-
+            
             $_row++;
         }
-
+        
         // free resultset memory
         $this->grid_real_q->free_result();
-
+        
         // return the formatted output
         return $this->makeOutput($int_num2show);
     }
-
-
+    
+    
     /**
      * Method to format an output of datagrid
-     *
-     * @param   integer $int_num2show
-     * @return  string
-     */
+    *
+    * @param   integer $int_num2show
+    * @return  string
+    */
     protected function makeOutput($int_num2show = 30)
     {
         // remove invisible fields
@@ -351,10 +351,10 @@ class simbio_datagrid extends simbio_table
             // append array to table
             $this->appendTableRow($_data);
         }
-
+        
         // init buffer return var
         $_buffer = '';
-
+        
         // create paging
         $_paging =  null;
         if ($this->num_rows > $int_num2show && !$this->disable_paging) {
@@ -365,13 +365,12 @@ class simbio_datagrid extends simbio_table
         // setting form target
         $_target = '_self';
         if ($this->using_AJAX) {
-            $_target = 'submitExec';
+            $_target = 'blindSubmit';
             // below is for debugging purpose only
             debugBox(content: function() {
                 debug($this->sql_str);
-                echo '<section><iframe id="submitExec" name="submitExec" /></section>' . PHP_EOL;
             });
-
+            
             if (isDev() === false) {
                 // hidden iframe for form executing
                 $_iframe = '<iframe name="submitExec" style="display: none; visibility: hidden; width: 100%; height: 0;"></iframe>'."\n";
@@ -380,34 +379,34 @@ class simbio_datagrid extends simbio_table
         // if editable
         if ($this->editable) {
             if (class_exists('simbio_form_maker')) {
-              $form_maker = new simbio_form_maker($this->table_name, $this->chbox_form_URL, $str_form_method = 'post', false);
-              $form_maker->submit_target = $_target;
-              $form_maker->add_form_attributes= 'class="form-inline"';
-              $_buffer .= $form_maker->startForm();
+                $form_maker = new simbio_form_maker($this->table_name, $this->chbox_form_URL, $str_form_method = 'post', false);
+                $form_maker->submit_target = $_target;
+                $form_maker->add_form_attributes= 'class="form-inline"';
+                $_buffer .= $form_maker->startForm();
             } else {
-              $_buffer .= '<form action="'.$this->chbox_form_URL.'" name="'.$this->table_name.'" id="'.$this->table_name.'" target="'.$_target.'" method="post" class="form-inline">'."\n";
+                $_buffer .= '<form action="'.$this->chbox_form_URL.'" name="'.$this->table_name.'" id="'.$this->table_name.'" target="'.$_target.'" method="post" class="form-inline">'."\n";
             }
-
-
+            
+            
             $_check_all = __('Check All');
             $_uncheck_all = __('Uncheck All');
-
+            
             // action buttons group
             $_button_grp = '<table cellspacing="0" cellpadding="5" class="datagrid-action-bar" style="width: 100%;"><tr>';
             // if checkbox is include then show button
             if ($this->chbox_property) {
                 $_button_grp .= '<td><input type="button" onclick="chboxFormSubmit(\''.$this->table_name.'\', \''.$this->chbox_confirm_msg.'\', '.((int)$this->enable_chbox_confirm).')" value="'.($this->chbox_action_button?$this->chbox_action_button:__('Delete Selected Data')).'" class="s-btn btn '.($this->chbox_action_button?'btn-success':'btn-danger').'" /> '
-                    .'<input type="button" value="'.$_check_all.'" class="check-all button btn btn-default" /> '
-                    .'<input type="button" value="'.$_uncheck_all.'" class="uncheck-all button btn btn-default" /> '
-                    .'</td>';
+                .'<input type="button" value="'.$_check_all.'" class="check-all button btn btn-default" /> '
+                .'<input type="button" value="'.$_uncheck_all.'" class="uncheck-all button btn btn-default" /> '
+                .'</td>';
             }
-
+            
             // paging
             if ($_paging) {
                 $_button_grp .= '<td class="paging-area">'.$_paging."\n".'</td>';
             }
             $_button_grp .= '</tr></table>'."\n";
-
+            
             // table grid
             if (!isset($_SERVER['QUERY_STRING'])) {
                 $_SERVER['QUERY_STRING'] = '';

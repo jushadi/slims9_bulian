@@ -103,7 +103,9 @@ if (isset($_GET['versionlist'])) {
     'SLiMS 9.5.1 | Bulian',
     'SLiMS 9.5.2 | Bulian',
     'SLiMS 9.6.0 | Bulian',
-    'SLiMS 9.6.1 | Bulian'
+    'SLiMS 9.6.1 | Bulian',
+    'SLiMS 9.7.0 | Bulian D. Roger',
+    'SLiMS 9.7.1 | Bulian D. Roger'
   ];
   die(json_encode(['status' => true, 'data' => $versionList]));
 }
@@ -252,6 +254,31 @@ switch ($action) {
       if ($action === 're-upgrade') {
         $_POST['oldVersion'] = $_SESSION['oldVersion'];
       }
+
+      // Define mock functions that might be called in submenu files
+      if (!function_exists('do_checkIP')) {
+        function do_checkIP($permission) {
+          // Mock function for upgrade context
+          return true;
+        }
+      }
+      
+      if (!function_exists('__')) {
+        function __($text) {
+          // Mock translation function
+          return $text;
+        }
+      }
+      
+      // Define MWB constant if not defined (usually defined in admin context)
+      if (!defined('MWB')) {
+        define('MWB', '/admin/modules/');
+      }
+
+      if (!defined('MDLBS')) {
+        define('MDLBS', '../admin/modules/');
+      }
+
       require_once 'Upgrade.inc.php';
       $upgrade = Install\Upgrade::init($slims)->from($_POST['oldVersion']);
 

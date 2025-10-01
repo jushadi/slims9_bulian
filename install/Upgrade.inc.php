@@ -21,7 +21,7 @@ class Upgrade
    *
    * @var int
    */
-  private $version = 34;
+  private $version = 38;
 
   /**
    * @param SLiMS $slims
@@ -880,8 +880,8 @@ ADD INDEX (  `input_date` ,  `last_update` ,  `uid` ) ;";
      member_name=(SELECT m.member_name FROM member m WHERE m.member_id=NEW.member_id),
      member_type_name=(SELECT mmt.member_type_name FROM mst_member_type mmt LEFT JOIN member m ON m.member_type_id=mmt.member_type_id WHERE m.member_id=NEW.member_id);";
 
-    $error_trigger = $this->slims->queryTrigger($query_trigger,20);
-    $error = array_merge($error, $error_trigger);
+    // $error_trigger = $this->slims->queryTrigger($query_trigger,20);
+    $error = array_merge($error, /*$error_trigger*/);
 
     // fix mst_topic:classification
     $fix_classification = $this->slims->changeColumn('mst_topic', [
@@ -1135,7 +1135,7 @@ ADD INDEX (  `input_date` ,  `last_update` ,  `uid` ) ;";
     }
 
     /**
-     * Upgrade role to v9.x.x
+     * Upgrade role to v9.7.0
      */
     function upgrade_role_36(){
         $sql['create'][] = "CREATE TABLE `user_tokens` (
@@ -1159,5 +1159,197 @@ ADD INDEX (  `input_date` ,  `last_update` ,  `uid` ) ;";
         $sql['alter'][] = "ALTER TABLE `user` CHANGE `last_login_ip` `last_login_ip` varchar(50) COLLATE 'utf8mb3_unicode_ci' NULL AFTER `last_login`;";
         $sql['alter'][] = "ALTER IGNORE TABLE mst_voc_ctrl ADD UNIQUE idx_heading(topic_id, related_topic_id);"; 
         return $this->slims->query($sql, ['create', 'alter'],36);
+    }
+
+    /**
+     * Upgrade role to v9.7.1
+     */
+    function upgrade_role_37(){
+    }
+
+    /**
+     * Upgrade role to v9.7.2
+     */
+    function upgrade_role_38(){
+      $sql['drop'][] = "DROP TRIGGER IF EXISTS `delete_loan_history`;";
+      $sql['drop'][] = "DROP TRIGGER IF EXISTS `update_loan_history`;";
+      $sql['drop'][] = "DROP TRIGGER IF EXISTS `insert_loan_history`;";
+
+      $error = $this->slims->query($sql, ['drop'],38);
+      
+      // Update submenu references from MD5 hash to menu keys
+      try {
+        $updatedCount = $this->updateSubMenu();
+        
+        if ($updatedCount > 0) {
+          error_log("Successfully updated {$updatedCount} group_access records with new submenu format.");
+        } else {
+          error_log("No group_access records required submenu format updates.");
+        }
+        
+      } catch (\Exception $e) {
+        $errorMsg = "Error updating submenu format: " . $e->getMessage();
+        error_log($errorMsg);
+        $error[] = $errorMsg;
+      }
+      
+      return $error;
+    }
+    
+    private function getSubMenuFromAllModules() {
+      // get modules using mysqli directly
+      $dbs = $this->slims->getDb();
+      $sql = "SELECT * FROM mst_module";
+      $query = mysqli_query($dbs, $sql);
+      
+      if (!$query) {
+        error_log("Error getting modules: " . mysqli_error($dbs));
+        return [];
+      }
+      
+      $modules = [];
+      while ($row = mysqli_fetch_assoc($query)) {
+        $modules[] = $row;
+      }
+      
+      $allMenus = [];
+      $modulesPath = __DIR__ . '/../admin/modules';
+      
+      foreach ($modules as $module) {
+        // Check if module has required fields
+        if (!isset($module['module_path'])) {
+          continue;
+        }
+        
+        $moduleDir = $module['module_path'];
+        $submenuFile = $modulesPath . '/' . $moduleDir . '/submenu.php';
+        
+        if (file_exists($submenuFile)) {
+          // Initialize menu array for this module
+          $menu = [];
+          
+          // Capture output and include the submenu file
+          ob_start();
+          try {
+            // Create necessary variables that might be used in submenu files
+            global $sysconf;
+            
+            // Mock session for checking user privileges
+            if (!isset($_SESSION['uid'])) {
+              $_SESSION['uid'] = 1; // Set as admin for upgrade context
+            }
+            
+            include $submenuFile;
+            
+            // Add this module's menu to the collection
+            if (!empty($menu)) {
+              $allMenus[$moduleDir] = $menu;
+            }
+            
+          } catch (\Exception $e) {
+            // Log error but continue with other modules
+            error_log("Error loading submenu for module {$moduleDir}: " . $e->getMessage());
+          }
+          
+          // Clean output buffer
+          ob_end_clean();
+        }
+      }
+      
+      return $allMenus;
+    }
+
+    private function updateSubMenu() {
+      // Get database connection
+      $dbs = $this->slims->getDb();
+      
+      // Get all submenus from all modules
+      $allMenus = $this->getSubMenuFromAllModules();
+      
+      // Create mapping from MD5 hash to menu key
+      $hashToKeyMapping = [];
+      
+      foreach ($allMenus as $moduleDir => $moduleMenus) {
+        foreach ($moduleMenus as $menuKey => $menuData) {
+          // Skip header items (they don't have URLs)
+          if (isset($menuData[0]) && $menuData[0] === 'Header') {
+            continue;
+          }
+          
+          // Get the URL from menu data
+          if (isset($menuData[1])) {
+            $url = $menuData[1];
+
+            // Calculate MD5 hash of the URL
+            $urlHash = md5($url);
+            
+            // Map hash to menu key
+            $hashToKeyMapping[$urlHash] = $menuKey;
+          }
+        }
+      }
+      
+      // Get all group_access records that have menus using mysqli
+      $sql = "SELECT * FROM group_access WHERE menus IS NOT NULL AND menus != ''";
+      $query = mysqli_query($dbs, $sql);
+      
+      if (!$query) {
+        error_log("Error getting group_access records: " . mysqli_error($dbs));
+        return 0;
+      }
+      
+      $groupAccesses = [];
+      while ($row = mysqli_fetch_assoc($query)) {
+        $groupAccesses[] = $row;
+      }
+      
+      $updateCount = 0;
+      
+      foreach ($groupAccesses as $groupAccess) {
+        $menusJson = $groupAccess['menus'];
+        $menus = json_decode($menusJson, true);
+        
+        if (!is_array($menus)) {
+          continue;
+        }
+        
+        $updated = false;
+        $newMenus = [];
+        
+        foreach ($menus as $menuItem) {
+          // Check if this menu item is a hash that we can convert to a key
+          if (isset($hashToKeyMapping[$menuItem])) {
+            // Replace hash with menu key
+            $newMenus[] = $hashToKeyMapping[$menuItem];
+            $updated = true;
+          } else {
+            // Keep the original item (might already be a key or unknown hash)
+            $newMenus[] = $menuItem;
+          }
+        }
+        
+        // Update database if any changes were made
+        if ($updated) {
+          $newMenusJson = json_encode($newMenus);
+          
+          // Use mysqli for update
+          $escapedMenusJson = mysqli_real_escape_string($dbs, $newMenusJson);
+          $groupId = intval($groupAccess['group_id']);
+          $moduleId = intval($groupAccess['module_id']);
+          
+          $updateSql = "UPDATE group_access SET menus = '{$escapedMenusJson}' WHERE group_id = {$groupId} AND module_id = {$moduleId}";
+          $result = mysqli_query($dbs, $updateSql);
+          
+          if ($result) {
+            $updateCount++;
+            error_log("Updated group_access: group_id={$groupAccess['group_id']}, module_id={$groupAccess['module_id']}");
+          } else {
+            error_log("Failed to update group_access: group_id={$groupAccess['group_id']}, module_id={$groupAccess['module_id']} - " . mysqli_error($dbs));
+          }
+        }
+      }
+      
+      error_log("SubMenu update completed. Updated {$updateCount} records.");
+      return $updateCount;
     }
 }

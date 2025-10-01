@@ -59,7 +59,13 @@ $can_read = utility::havePrivilege('bibliography', 'r');
 $can_write = utility::havePrivilege('bibliography', 'w');
 
 if (!$can_read) {
-    die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+    die('<div class="errorBox">' . __('_You are not authorized to view this section') . '</div>');
+}
+# CHECK ACCESS
+if ($_SESSION['uid'] != 1) {
+    if (!utility::haveAccess('bibliography.bibliography-list')) {
+        die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+    }
 }
 
 // execute registered hook
@@ -108,6 +114,14 @@ if (isset($_POST['removeImage']) && isset($_POST['bimg']) && isset($_POST['img']
 }
 /* RECORD OPERATION */
 if (isset($_POST['saveData']) AND $can_read AND $can_write) {
+    # CHECK ACCESS
+    if ($_SESSION['uid'] != 1) {
+        if (!utility::haveAccess('bibliography.bibliography-add')) {
+            utility::jsToastr('Bibliography', __('You are not authorized to view this section'), 'error');
+            writeLog('staff', $_SESSION['uid'], 'system', $_SESSION['realname'] . ' try to access bibliography module without having access right from ' . $_SERVER['REMOTE_ADDR']);
+            exit();
+        }
+    }
     if (!simbio_form_maker::isTokenValid()) {
         utility::jsToastr('Bibliography', __('Invalid form submission token!'), 'error');
         writeLog('staff', $_SESSION['uid'], 'system', 'Invalid form submission token, might be a CSRF attack from ' . $_SERVER['REMOTE_ADDR']);
@@ -712,6 +726,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
 
     echo $datagrid_result;
 } elseif (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'detail')) {
+    # CHECK ACCESS
+    if ($_SESSION['uid'] != 1) {
+        if (!utility::haveAccess('bibliography.bibliography-add')) {
+            die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+        }
+    }
+
     if ((isset($_GET['action'])) AND ($_GET['action'] == 'detail')) {
         # ADV LOG SYSTEM - STIIL EXPERIMENTAL
         $log = new AlLibrarian('1153', array("username" => $_SESSION['uname'], "uid" => $_SESSION['uid'], "realname" => $_SESSION['realname']));
@@ -1212,6 +1233,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'history') {
     </script>
     <?php
 } else {
+    # CHECK ACCESS
+    if ($_SESSION['uid'] != 1) {
+        if (!utility::haveAccess('bibliography.bibliography-list')) {
+            die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+        }
+    }
+
     # ADV LOG SYSTEM - STIIL EXPERIMENTAL
     $log = new AlLibrarian('1151', array("username" => $_SESSION['uname'], "uid" => $_SESSION['uid'], "realname" => $_SESSION['realname']));
 

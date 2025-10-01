@@ -24,10 +24,10 @@
 do_checkIP('smc');
 do_checkIP('smc-reporting');
 
-$menu[] = array('Header', __('REPORTING FORM'));
-$menu[] = array(__('Collection Statistic'), MWB.'reporting/index.php', __('View Library Collection Statistic'));
-$menu[] = array(__('Loan Report'), MWB.'reporting/loan_report.php', __('View Library Loan Report'));
-$menu[] = array(__('Membership Report'), MWB.'reporting/member_report.php', __('View Membership Report'));
-$menu[] = array('Header', __('OTHER REPORTS'));
+$menu['reporting.header-reporting-form'] = array('Header', __('REPORTING FORM'));
+$menu['reporting.collection-statistic'] = array(__('Collection Statistic'), MWB.'reporting/index.php', __('View Library Collection Statistic'));
+$menu['reporting.loan-report'] = array(__('Loan Report'), MWB.'reporting/loan_report.php', __('View Library Loan Report'));
+$menu['reporting.membership-report'] = array(__('Membership Report'), MWB.'reporting/member_report.php', __('View Membership Report'));
+$menu['reporting.header-other-reports'] = array('Header', __('OTHER REPORTS'));
 // other/custom report menu
 require MDLBS.'reporting/customs/customs_report_list.inc.php';

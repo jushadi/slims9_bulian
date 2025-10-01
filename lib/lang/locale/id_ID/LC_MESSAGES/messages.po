@@ -1194,7 +1194,7 @@ msgstr "Anda yakin akan menghapus pengarah yang dipilih?"
 #: admin/modules/serial_control/serial_base_lib.inc.php:136
 #: simbio2/simbio_GUI/form_maker/simbio_form_table.inc.php:117
 #: simbio2/simbio_GUI/form_maker/simbio_form_table_AJAX.inc.php:131
-msgid "Once deleted, it can't be restored!"
+msgid "Once deleted, it cannot be restored!"
 msgstr "Jika terhapus, data tidak dapat dikembalikan!"
 
 #: admin/modules/bibliography/iframe_author.php:81

@@ -114,7 +114,7 @@ class simbio_form_table extends simbio_form_maker
             }
             // delete button exists if the record_id exists
             if ($this->record_id && $this->delete_button) {
-                $_delete_button = '<input type="button" value="'.$_del_value.'" class="s-btn btn btn-danger" onclick="confSubmit(\'deleteForm\', \'' . addslashes(str_replace('{recordTitle}', $this->record_title, __('Are you sure to delete {recordTitle}?'))) . '\n' . addslashes(__('Once deleted, it can\'t be restored!')) .'\')" />';
+                $_delete_button = '<input type="button" value="'.$_del_value.'" class="s-btn btn btn-danger" onclick="confSubmit(\'deleteForm\', \'' . addslashes(str_replace('{recordTitle}', $this->record_title, __('Are you sure to delete {recordTitle}?'))) . '\n' . addslashes(__('Once deleted, it cannot be restored!')) .'\')" />';
             }
         }
 

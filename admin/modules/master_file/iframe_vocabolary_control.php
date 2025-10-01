@@ -24,7 +24,7 @@ ob_start();
 <script type="text/javascript">
 function confirmProcess(topic_id, vocabolary_id, related_topic_id)
 {
-  var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected topic?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it can\'t be restored!'));?>');
+  var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected topic?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it cannot be restored!'));?>');
   if (confirmBox) {
     // set hidden element value
     document.hiddenActionForm.tid.value = topic_id;

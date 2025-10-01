@@ -56,7 +56,12 @@ $can_write = utility::havePrivilege('membership', 'w');
 if (!$can_read) {
     die('<div class="errorBox">You dont have enough privileges to view this section</div>');
 }
-
+# CHECK ACCESS
+if ($_SESSION['uid'] != 1) {
+    if (!utility::haveAccess('membership.view-member-list')) {
+        die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+    }
+}
 // execute registered hook
 Plugins::getInstance()->execute(Plugins::MEMBERSHIP_INIT);
 
@@ -266,6 +271,8 @@ if (isset($_POST['saveData']) && $can_read && $can_write) {
                 }
                 // update other tables contain this member ID
                 @$dbs->query('UPDATE loan SET member_id=\''.$data['member_id'].'\' WHERE member_id=\''.$old_member_ID.'\'');
+                // update loan_history to match loan table changes (replaces update_loan_history trigger)
+                @$dbs->query('UPDATE loan_history SET member_id=\''.$data['member_id'].'\' WHERE member_id=\''.$old_member_ID.'\'');
                 @$dbs->query('UPDATE fines SET member_id=\''.$data['member_id'].'\' WHERE member_id=\''.$old_member_ID.'\'');
                 toastr(__('Member Data Successfully Updated'))->success();
                 // upload status alert
@@ -434,6 +441,12 @@ if(isset($_GET['expire'])) {
 if (isset($_POST['detail']) OR (isset($_GET['action']) AND $_GET['action'] == 'detail')) {
     if (!($can_read AND $can_write)) {
         die('<div class="errorBox">'.__('You don\'t have enough privileges to view this section').'</div>');
+    }
+    # CHECK ACCESS
+    if ($_SESSION['uid'] != 1) {
+        if (!utility::haveAccess('membership.add-new-member')) {
+            die('<div class="errorBox">' . __('You are not authorized to view this section') . '</div>');
+        }
     }
     /* RECORD FORM */
     $itemID = $dbs->escape_string(trim(isset($_POST['itemID'])?$_POST['itemID']:'0'));

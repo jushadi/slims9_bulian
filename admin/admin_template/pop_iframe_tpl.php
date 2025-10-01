@@ -7,8 +7,10 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, post-check=0, pre-check=0"/>
     <meta http-equiv="Expires" content="Sat, 26 Jul 1997 05:00:00 GMT"/>
     <link rel="stylesheet" type="text/css" href="<?php echo SWB . 'css/bootstrap.min.css'; ?>"/>
+    <link rel="stylesheet" type="text/css" href="<?php echo JWB; ?>colorbox/colorbox.css"/>
     <link rel="stylesheet" type="text/css" href="<?php echo SWB . 'admin/' . $sysconf['admin_template']['css']; ?>?<?php echo date('this') ?>"/>
     <script type="text/javascript" src="<?php echo JWB; ?>jquery.js"></script>
+    <script type="text/javascript" src="<?php echo JWB; ?>colorbox/jquery.colorbox-min.js"></script>
     <script type="text/javascript" src="<?php echo JWB; ?>gui.js"></script>
 </head>
 <body>
@@ -20,6 +22,9 @@
 <script type="text/javascript">
     // if we are inside iframe
     jQuery(document).ready(function () {
+      // Register admin events for this iframe content
+      jQuery('#pageContent').registerAdminEvents();
+      
       <?php if (isset($_GET['block'])) { ?>
         var parentWin = self.parent;
         if (parentWin && parentWin.jQuery('.editFormLink').length > 0) {

@@ -60,7 +60,7 @@ ob_start();
 <script type="text/javascript">
 function confirmProcess(int_biblio_id, int_item_id)
 {
-  var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected topic?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it can\'t be restored!'));?>');
+  var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected topic?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it cannot be restored!'));?>');
   if (confirmBox) {
     // set hidden element value
     document.hiddenActionForm.bid.value = int_biblio_id;

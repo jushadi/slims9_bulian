@@ -68,6 +68,8 @@ if (isset($_POST['confirmFinish'])) {
     if (isset($_POST['purge']) AND !empty($_POST['purge'])) {
       // purge data in item table
       $purge_item_q = $dbs->query('DELETE FROM item WHERE item_id IN (SELECT item_id FROM stock_take_item WHERE status=\'m\')');
+      // purge data in loan_history table first (due to foreign key constraint)
+      $purge_loan_history_q = $dbs->query('DELETE FROM loan_history WHERE loan_id IN (SELECT loan_id FROM loan WHERE item_code IN (SELECT item_code FROM stock_take_item WHERE status=\'m\'))');
       // purge data in loan table
       $purge_loan_q = $dbs->query('DELETE FROM loan WHERE item_code IN (SELECT item_code FROM stock_take_item WHERE status=\'m\')');
     }

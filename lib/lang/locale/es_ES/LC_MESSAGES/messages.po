@@ -732,7 +732,7 @@ msgid "Are you sure to remove selected item?"
 msgstr "¿Está seguro de eliminar el ejemplar seleccionado?"
 
 #: admin/modules/bibliography/iframe_item_list.php:61
-msgid "Once deleted, it can't be restored!"
+msgid "Once deleted, it cannot be restored!"
 msgstr "¡Una vez eliminado, no se podrá deshacer!"
 
 #: admin/modules/bibliography/iframe_item_list.php:79

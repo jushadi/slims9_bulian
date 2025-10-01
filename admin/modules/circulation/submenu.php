@@ -23,11 +23,13 @@
 do_checkIP('smc');
 do_checkIP('smc-circulation');
 
-$menu[] = array('Header', __('CIRCULATION'));
-$menu[] = array(__('Start Transaction'), MWB.'circulation/index.php?action=start', __('Start Circulation Transaction Proccess'));
-$menu[] = array(__('Quick Return'), MWB.'circulation/quick_return.php', __('Quick Return Collection'));
-$menu[] = array(__('Loan Rules'), MWB.'circulation/loan_rules.php', __('View and Modify Circulation Loan Rules'));
-$menu[] = array(__('Loan History'), MWB.'reporting/customs/loan_history.php', __('Loan History Overview'));
-$menu[] = array(__('Due Date Warning'), MWB.'reporting/customs/due_date_warning.php', __('View Members That About to Have Overdues'));
-$menu[] = array(__('Overdued List'), MWB.'reporting/customs/overdued_list.php', __('View Members Having Overdues'));
-$menu[] = array(__('Reservation'), MWB.'reporting/customs/reserve_list.php', __('Reservation'));
+$menu['circulation.header-circulation'] = array('Header', __('CIRCULATION'));
+$menu['circulation.start-transaction'] = array(__('Start Transaction'), MWB.'circulation/index.php?action=start', __('Start Circulation Transaction Proccess'));
+$menu['circulation.quick-return'] = array(__('Quick Return'), MWB.'circulation/quick_return.php', __('Quick Return Collection'));
+$menu['circulation.loan-rules'] = array(__('Loan Rules'), MWB.'circulation/loan_rules.php', __('View and Modify Circulation Loan Rules'));
+$menu['circulation.loan-history'] = array(__('Loan History'), MWB.'reporting/customs/loan_history.php', __('Loan History Overview'));
+$menu['circulation.due-date-warning'] = array(__('Due Date Warning'), MWB.'reporting/customs/due_date_warning.php', __('View Members That About to Have Overdues'));
+$menu['circulation.overdued-list'] = array(__('Overdued List'), MWB.'reporting/customs/overdued_list.php', __('View Members Having Overdues'));
+$menu['circulation.reserve-list'] = array(__('Reservation'), MWB.'reporting/customs/reserve_list.php', __('Reservation'));
+$menu['circulation.header-maintenance'] = array('Header', __('MAINTENANCE'));
+$menu['circulation.loan-history-maintenance'] = array(__('Loan History Maintenance'), MWB.'circulation/loan_history_maintenance.php', __('Loan History Maintenance'));

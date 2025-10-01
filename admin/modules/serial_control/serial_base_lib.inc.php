@@ -133,7 +133,7 @@ class serial
         <script type="text/javascript">
         function confirmProcess(int_serial_id, int_kardex_id)
         {
-            var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected Kardex data?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it can\'t be restored!'));?>');
+            var confirmBox = confirm('<?php echo addslashes(__('Are you sure to remove selected Kardex data?'));?>' + "\n" + '<?php echo addslashes(__('Once deleted, it cannot be restored!'));?>');
             if (confirmBox) {
                 // set hidden element value
                 document.hiddenActionForm.serialID.value = int_serial_id;

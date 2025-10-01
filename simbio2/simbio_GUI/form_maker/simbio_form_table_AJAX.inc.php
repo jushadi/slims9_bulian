@@ -139,7 +139,7 @@ class simbio_form_table_AJAX extends simbio_form_maker
           // delete button exists if the record_id properties exists
           if ($this->record_id && $this->delete_button) {
               // create delete button
-              $_delete_button = '<input type="button" value="'.$_del_value.'" class="s-btn btn btn-danger confirmSubmit" onclick="confSubmit(\'deleteForm\', \'' . addslashes(str_replace('{recordTitle}', $this->record_title, __('Are you sure to delete {recordTitle}?'))) . '\n' . addslashes(__('Once deleted, it can\'t be restored!')) .'\')" />';
+              $_delete_button = '<input type="button" value="'.$_del_value.'" class="s-btn btn btn-danger confirmSubmit" onclick="confSubmit(\'deleteForm\', \'' . addslashes(str_replace('{recordTitle}', $this->record_title, __('Are you sure to delete {recordTitle}?'))) . '\n' . addslashes(__('Once deleted, it cannot be restored!')) .'\')" />';
           }
       }
 
@@ -192,13 +192,13 @@ class simbio_form_table_AJAX extends simbio_form_maker
       $form_name = 'deleteForm';
       $form_token = self::genRandomToken();
       $form  = '<form action="'.preg_replace('/\?.+/i', '', $this->form_action)
-                .'" name="'.$form_name.'" id="'.$form_name.'" target="submitExec" method="post" class="form-inline">';
+                .'" name="'.$form_name.'" id="'.$form_name.'" target="blindSubmit" method="post" class="form-inline">';
       $form .= '<input type="hidden" name="csrf_token" value="'.$form_token.'" />';
       $form .= '<input type="hidden" name="form_name" value="'.$form_name.'" />';
       $form .= '<input type="hidden" name="itemID" value="'.$this->record_id.'" /><input type="hidden" name="itemAction" value="true" /></form>';
-      if (isset($_SESSION)) {
-        $_SESSION['csrf_token'][$form_name] = $form_token;
-      }
+
+      // add token to session
+      self::addTokenToPool($form_name, $form_token);
 
       return $form;
     }

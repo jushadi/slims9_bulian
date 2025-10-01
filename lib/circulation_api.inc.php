@@ -132,6 +132,11 @@ class circapi
       $_renewed = $_renewed + 1;
       $_sql_doextend = 'UPDATE loan SET due_date=\''.$_new_dd.'\', renewed=\''.$_renewed.'\' WHERE loan_id='.$loan_id;
       $_stmt_doextend = $obj_db->query($_sql_doextend);
+      
+      // Update loan history (replaces update_loan_history trigger)
+      $_sql_update_history = 'UPDATE loan_history SET due_date=\''.$_new_dd.'\', renewed=\''.$_renewed.'\' WHERE loan_id='.$loan_id;
+      $obj_db->query($_sql_update_history);
+      
       if ($_today > $_old_dd) {
         $_uts_duedate = DateTime::createFromFormat('Y-m-d', $_old_dd);
         $uts_duedate = (int) $_uts_duedate->format('U');

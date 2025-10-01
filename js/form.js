@@ -429,7 +429,7 @@ const serializeChbox = function(strParentID) {
  * @param {boolean} withConfirm - Whether to show confirmation
  * @returns {boolean} Success status
  */
-const confSubmit = function(strFormID, strMsg, withConfirm) {
+const confSubmit = function(strFormID, strMsg, withConfirm = true) {
   const formID = FormUtils.sanitizeInput(strFormID);
   const formEl = FormUtils.getElement('#' + formID);
 
